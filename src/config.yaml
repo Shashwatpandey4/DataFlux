@@ -2,13 +2,32 @@
 
 mode: safe
 
-emitters_per_worker: 50000 
+emitters_per_worker: 50000
 emitters: 1000000
 flush_batch_size: 500
 flush_interval_sec: 2
 retry_probability: 0.05
 time_jitter_sec: 2
-sink: kafka  
+
+sinks:
+  kafka_main:
+    type: kafka
+    kafka:
+      bootstrap_servers: localhost:9092
+      topic_prefix: dataflux
+  fastapi_echo:
+    type: fastapi
+    fastapi:
+      endpoint: http://localhost:8000/ingest
+      timeout: 5
+  mock_sink:
+    type: mock
+
+region_sinks:
+  us-west: [kafka_main, fastapi_echo]
+  us-east: [kafka_main]
+  us-central: [mock_sink]
+  default: [mock_sink]
 
 regions:
   - name: us-west
