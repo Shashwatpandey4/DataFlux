@@ -1,14 +1,17 @@
 from counters import count_event
-from fault_injection import maybe_fail
-from utils import apply_jitter
+from sinks.factory import SinkFactory
 
 
-def flush_batch(region, batch, counters):
-    for event in batch:
-        if maybe_fail():
-            counters["failed"] += 1
-            continue
+class Dispatcher:
+    def __init__(self, config):
+        self.sink = SinkFactory.create_sink(config["sink"], config)
 
-        event["timestamp"] = apply_jitter(event["timestamp"], 2)
+    def flush_batch(self, region, batch, counters):
+        """Flush a batch of events using the configured sink."""
+        self.sink.flush(region, batch, counters)
+        for event in batch:
+            count_event(event)
 
-        count_event(event)
+    def close(self):
+        """Clean up resources."""
+        self.sink.close()

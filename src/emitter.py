@@ -1,9 +1,9 @@
 import asyncio
 import random
 
-from counters import counters
-from edge_buffer import add_to_buffer
-from event_generators import (
+from src.counters import counters
+from src.edge_buffer import add_to_buffer
+from src.event_generators import (
     device_telemetry,
     model_telemetry,
     recommendation_feedback,
@@ -11,7 +11,7 @@ from event_generators import (
     user_interactions,
     video_logs,
 )
-from stream_weights import weighted_random_choice
+from src.stream_weights import weighted_random_choice
 
 event_generators_map = {
     "video_logs": video_logs.generate_video_log,
