@@ -14,20 +14,6 @@ DataFlux is a flexible, pluggable data pipeline for simulating and emitting stre
 
 ---
 
-## Architecture
-```
-+-------------------+      +-------------------+
-|  Event Generators |----->|     Edge Buffer   |-----> Sinks (Kafka, HTTP, ...)
-+-------------------+      +-------------------+
-                                 |
-                                 v
-                        +----------------+
-                        | Prometheus /metrics |
-                        +----------------+
-```
-
----
-
 ## Quick Start (Docker Compose)
 
 1. **Build and start everything:**
@@ -67,6 +53,10 @@ DataFlux is a flexible, pluggable data pipeline for simulating and emitting stre
 
 ---
 
+   <div align="center">
+     <img src="dataflux.png" alt="DataFlux Metrics Display" width="800"/>
+   </div>
+---
 ## Development
 - All source code is in `src/`
 - Sinks in `src/sinks/`, event generators in `src/event_generators/`
