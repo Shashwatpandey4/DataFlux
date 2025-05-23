@@ -1,0 +1,2 @@
+[console_scripts]
+dataflux = launch:main
