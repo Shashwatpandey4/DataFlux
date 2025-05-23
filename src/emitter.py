@@ -29,7 +29,7 @@ async def emit(user, config, buffers):
         device_id = random.choice(user["devices"])
         event = event_generators_map[stream](user["user_id"], device_id)
         event["stream"] = stream
-        add_to_buffer(
+        await add_to_buffer(
             event,
             user["region"],
             config["flush_batch_size"],

@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 
 class BaseSink(ABC):
-    """Base class for all sink implementations. Defines the interface for sinks."""
+    """Base class for all sinks."""
 
     @abstractmethod
     def initialize(self, config: Dict[str, Any]) -> None:
@@ -11,15 +11,13 @@ class BaseSink(ABC):
         pass
 
     @abstractmethod
-    def flush(
-        self, region: str, batch: List[Dict[str, Any]], counters: Dict[str, int]
-    ) -> None:
-        """Flush a batch of events to the sink."""
+    async def send(self, events: List[Dict[str, Any]]) -> None:
+        """Send events to the sink."""
         pass
 
     @abstractmethod
-    def close(self) -> None:
-        """Clean up resources when shutting down."""
+    async def close(self) -> None:
+        """Close the sink and cleanup resources."""
         pass
 
     @abstractmethod

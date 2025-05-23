@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+from src.counters import count_event
 from src.sinks.factory import SinkFactory
 
 
@@ -26,15 +27,22 @@ class EmitterRegistry:
         sink_names = self.region_sinks.get(region, self.default_sinks)
         return [self.sinks[name] for name in sink_names if name in self.sinks]
 
-    def flush(self, region: str, batch: List[Dict[str, Any]], counters: Dict[str, int]):
+    async def flush(
+        self, region: str, batch: List[Dict[str, Any]], counters: Dict[str, int]
+    ):
         """Flush a batch to all sinks for the given region."""
-        for sink in self.get_sinks_for_region(region):
-            sink.flush(region, batch, counters)
+        # Count events before flushing
+        for event in batch:
+            count_event(event)
 
-    def close(self):
+        # Send to all sinks for this region
+        for sink in self.get_sinks_for_region(region):
+            await sink.send(batch)
+
+    async def close(self):
         """Close all sinks managed by the registry."""
         for sink in self.sinks.values():
-            sink.close()
+            await sink.close()
 
     def get_all_metrics(self) -> dict:
         """Aggregate and return metrics from all sinks."""
