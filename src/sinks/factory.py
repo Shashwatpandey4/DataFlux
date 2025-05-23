@@ -24,3 +24,15 @@ class SinkFactory:
         sink = cls._sinks[sink_type]()
         sink.initialize(config)
         return sink
+
+
+def get_sink(sink_type: str):
+    """Get the appropriate sink based on sink type."""
+    if sink_type == "mock":
+        return MockSink()
+    elif sink_type == "kafka":
+        return KafkaSink()
+    elif sink_type == "fastapi":
+        return FastAPISink()
+    else:
+        raise ValueError(f"Unknown sink type: {sink_type}")
