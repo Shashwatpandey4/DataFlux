@@ -1,0 +1,59 @@
+# Default values for dataflux
+replicaCount: 1
+
+image:
+  repository: dataflux
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 9100
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Configuration for DataFlux
+config:
+  # Number of worker threads
+  num_workers: 4
+  
+  # Event generation rate (events per second)
+  events_per_second: 1000
+  
+  # Sink configurations
+  sinks:
+    mock_sink:
+      type: mock
+    fastapi_sink:
+      type: fastapi
+      fastapi:
+        endpoint: http://fastapi-service:8000/ingest
+        timeout: 5
+  
+  # Region configurations
+  region_sinks:
+    us-east: [fastapi_sink]
+    default: [mock_sink]
+
+# Persistence configuration
+persistence:
+  enabled: false  # Disabled for testing
+  storageClass: ""
+  size: 1Gi
+  accessMode: ReadWriteOnce
+  mountPath: /app/logs 

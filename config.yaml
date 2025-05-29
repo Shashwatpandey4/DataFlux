@@ -1,0 +1,49 @@
+# DataFlux Configuration File
+
+mode: safe
+
+emitters_per_worker: 50000
+emitters: 1000000
+flush_batch_size: 500
+flush_interval_sec: 2
+retry_probability: 0.05
+time_jitter_sec: 2
+
+sinks:
+  mock:
+    type: mock
+
+region_sinks:
+  default: [mock]
+
+regions:
+  - name: us-west
+    location: San Francisco, CA
+  - name: us-east
+    location: New York, NY
+  - name: us-central
+    location: Chicago, IL
+  - name: us-south
+    location: Austin, TX
+  - name: us-northeast
+    location: Boston, MA
+
+streams:
+  video_logs:
+    weight: 0.25
+    interval_sec: 0.01
+  user_interactions:
+    weight: 0.2
+    interval_sec: 0.01
+  device_telemetry:
+    weight: 0.15
+    interval_sec: 0.01
+  recommendation_feedback:
+    weight: 0.15
+    interval_sec: 0.01
+  training_data:
+    weight: 0.15
+    interval_sec: 0.2
+  model_telemetry:
+    weight: 0.10
+    interval_sec: 0.01

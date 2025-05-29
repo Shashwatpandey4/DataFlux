@@ -1,6 +1,6 @@
 import random
 
-from utils import generate_ulid, now
+from ..utils import generate_ulid, now
 
 
 def generate_user_interaction(user_id, device_id):

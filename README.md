@@ -1,32 +1,83 @@
 # DataFlux
 
-DataFlux is a flexible, pluggable data pipeline for simulating and emitting streaming events to multiple sinks (Kafka, HTTP, Mock, etc.), with support for multi-region, multi-sink, and real-time metrics via Prometheus.
+DataFlux is a flexible, pluggable data pipeline for simulating and emitting streaming events to multiple sinks (HTTP, Mock, etc.), with support for multi-region, multi-sink, and real-time metrics.
 
 ---
 
 ## Features
-- **Pluggable Sink Architecture**: Easily add new sinks (Kafka, FastAPI/HTTP, Mock, etc.)
+- **Pluggable Sink Architecture**: Easily add new sinks (FastAPI/HTTP, Mock, etc.)
 - **Multi-Region & Multi-Sink**: Route events to different sinks per region
 - **Event Generators**: Simulate various event types (telemetry, feedback, logs, etc.)
-- **Metrics Exporter**: Prometheus-compatible metrics on `/metrics`
-- **Dockerized**: One-command setup for the app, Kafka, and Zookeeper
+- **Real-time Metrics**: Live display of ingestion statistics and stream metrics
+- **Dockerized**: One-command setup for the application
+- **Kubernetes Ready**: Helm chart for production deployment
 - **Configurable**: All behavior via `config.yaml`
 
 ---
 
-## Quick Start (Docker Compose)
+## Quick Start
 
-1. **Build and start everything:**
+### Using Docker
+
+1. **Build and start the application:**
    ```sh
    docker-compose up --build
    ```
-   - This launches DataFlux, Kafka, and Zookeeper.
-   - Prometheus metrics available at [localhost:9100/metrics](http://localhost:9100/metrics)
-   - Kafka broker available at `localhost:9092`
+   - This launches DataFlux with all necessary configurations
+   - The application will start generating and processing events immediately
+   - You'll see real-time statistics in the console
 
-2. **Stop everything:**
+2. **Stop the application:**
    ```sh
    docker-compose down
+   ```
+
+### Using Kubernetes (Production)
+
+1. **Add the Helm repository:**
+   ```sh
+   helm repo add dataflux https://your-helm-repo-url
+   helm repo update
+   ```
+
+2. **Install the chart:**
+   ```sh
+   helm install dataflux dataflux/dataflux
+   ```
+
+3. **Customize the deployment:**
+   ```sh
+   helm install dataflux dataflux/dataflux \
+     --set replicaCount=3 \
+     --set config.events_per_second=5000
+   ```
+
+4. **Upgrade the deployment:**
+   ```sh
+   helm upgrade dataflux dataflux/dataflux
+   ```
+
+5. **Uninstall the deployment:**
+   ```sh
+   helm uninstall dataflux
+   ```
+
+### Development Mode (Editable)
+
+1. **Set up a virtual environment:**
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install dependencies in editable mode:**
+   ```sh
+   pip install -e .
+   ```
+
+3. **Run the application:**
+   ```sh
+   python -m src.main
    ```
 
 ---
@@ -36,36 +87,34 @@ DataFlux is a flexible, pluggable data pipeline for simulating and emitting stre
 - Example sink config:
   ```yaml
   sinks:
-    kafka_sink:
-      type: kafka
-      kafka:
-        bootstrap_servers: kafka:9092
-        topic_prefix: dataflux
     fastapi_sink:
       type: fastapi
       fastapi:
         endpoint: http://host.docker.internal:8000/ingest
         timeout: 5
+    mock_sink:
+      type: mock
   region_sinks:
-    us-east: [kafka_sink, fastapi_sink]
+    us-east: [fastapi_sink]
     default: [mock_sink]
   ```
 
+### Kubernetes Configuration
+The Helm chart supports various configuration options:
+- `replicaCount`: Number of DataFlux instances
+- `resources`: CPU and memory limits/requests
+- `config`: Application configuration
+- `persistence`: Log storage configuration
+
+See `helm/dataflux/values.yaml` for all available options.
+
 ---
 
-   <div align="center">
-     <img src="dataflux.png" alt="DataFlux Metrics Display" width="800"/>
-   </div>
----
 ## Development
 - All source code is in `src/`
 - Sinks in `src/sinks/`, event generators in `src/event_generators/`
-- To run locally (without Docker):
-  ```sh
-  export PYTHONPATH=src
-  pip install -r requirements.txt
-  python src/main.py
-  ```
+- The application uses relative imports for better module handling
+- For local development, use editable mode installation as shown above
 
 ---
 

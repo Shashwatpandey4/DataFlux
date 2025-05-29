@@ -1,5 +1,0 @@
-Metadata-Version: 2.2
-Name: dataflux
-Version: 0.1.0
-Requires-Dist: rich>=10.0.0
-Dynamic: requires-dist
