@@ -4,11 +4,11 @@ from pathlib import Path
 
 import yaml
 
-from src.counters import start_counter_logger
-from src.edge_buffer import initialize_buffers
-from src.emitter import launch_emitters
-from src.sinks.factory import get_sink
-from src.utils import generate_user_device_pool
+from .counters import start_counter_logger
+from .edge_buffer import initialize_buffers
+from .emitter import launch_emitters
+from .sinks.factory import get_sink
+from .utils import generate_user_device_pool
 
 
 def load_config(sink_type="mock"):

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: dataflux
+description: A Helm chart for DataFlux - A flexible, pluggable data pipeline for simulating and emitting streaming events
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: DataFlux Team
+keywords:
+  - data
+  - pipeline
+  - events
+  - streaming 

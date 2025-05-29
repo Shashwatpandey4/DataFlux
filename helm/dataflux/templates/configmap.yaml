@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dataflux.fullname" . }}-config
+  labels:
+    {{- include "dataflux.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    num_workers: {{ .Values.config.num_workers }}
+    events_per_second: {{ .Values.config.events_per_second }}
+    
+    sinks:
+      {{- toYaml .Values.config.sinks | nindent 6 }}
+    
+    region_sinks:
+      {{- toYaml .Values.config.region_sinks | nindent 6 }} 
