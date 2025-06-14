@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 services:
   dataflux:
@@ -8,6 +8,8 @@ services:
     tty: true
     stdin_open: true
     restart: unless-stopped
+    volumes:
+      - dataflux_logs:/app/logs
     deploy:
       resources:
         limits:
