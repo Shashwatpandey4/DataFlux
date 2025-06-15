@@ -2,12 +2,11 @@
 
 mode: safe
 
-emitters_per_worker: 50000
-emitters: 1000000
-flush_batch_size: 500
-flush_interval_sec: 2
+emitters: 100000
+flush_batch_size: 1000
+flush_interval_sec: 1
 retry_probability: 0.05
-time_jitter_sec: 2
+time_jitter_sec: 0.1
 
 sinks:
   mock:

@@ -1,9 +1,11 @@
 import asyncio
 import json
 
+import pytest
 from kafka import KafkaConsumer
 
-from sinks.factory import SinkFactory
+from src.sinks.factory import SinkFactory
+from src.sinks.kafka_sink import KafkaSink
 
 
 async def test_kafka_sink():
@@ -70,6 +72,21 @@ async def test_kafka_sink():
     finally:
         sink.close()
         consumer.close()
+
+
+@pytest.mark.asyncio
+async def test_kafka_sink_event_count_and_metrics():
+    sink = KafkaSink()
+    sink.producer = None  # No real producer needed for this unit test
+    events = [{"event_id": i} for i in range(7)]
+    await sink.send(events)
+    metrics = sink.get_metrics()
+    assert metrics["type"] == "kafka"
+    assert metrics["event_count"] == 7
+    # Send more events
+    await sink.send(events)
+    metrics = sink.get_metrics()
+    assert metrics["event_count"] == 14
 
 
 if __name__ == "__main__":

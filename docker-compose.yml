@@ -8,13 +8,6 @@ services:
     tty: true
     stdin_open: true
     restart: unless-stopped
-    volumes:
-      - dataflux_logs:/app/logs
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: '1G'
 
 volumes:
   dataflux_logs:
