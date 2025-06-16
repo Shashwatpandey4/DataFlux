@@ -24,15 +24,16 @@ DataFlux is a high-throughput data simulation framework designed to generate and
 
 1. **Build and start the application:**
    ```sh
-   docker-compose up --build
+   docker compose up --build
    ```
    - This launches DataFlux with all necessary configurations
    - The application will start generating and processing events immediately
    - You'll see real-time statistics in the console
+   - First 100 events are stored in `mock_data/events_TIMESTAMP.jsonl` for inspection
 
 2. **Stop the application:**
    ```sh
-   docker-compose down
+   docker compose down
    ```
 
 ### Using Kubernetes (Production)
@@ -101,6 +102,22 @@ DataFlux is a high-throughput data simulation framework designed to generate and
     us-east: [fastapi_sink]
     default: [mock_sink]
   ```
+
+### Event Types
+The system supports the following event types with configurable weights:
+- `video_logs`: Video streaming and playback events
+- `user_interactions`: User engagement and interaction events
+- `device_telemetry`: Device status and health metrics
+- `recommendation_feedback`: Recommendation system feedback
+- `training_data`: Machine learning training data
+- `model_telemetry`: Model performance and inference metrics
+
+### Mock Data Storage
+- The mock sink stores the first 100 events in a JSONL file
+- File location: `mock_data/events_TIMESTAMP.jsonl`
+- Events are stored in JSONL format (one JSON object per line)
+- All events are counted, but only the first 100 are stored for inspection
+- The file is persisted between container runs using Docker volumes
 
 ### Kubernetes Configuration
 The Helm chart supports various configuration options:

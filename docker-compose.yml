@@ -8,6 +8,10 @@ services:
     tty: true
     stdin_open: true
     restart: unless-stopped
+    volumes:
+      - ./mock_data:/app/mock_data
+    environment:
+      - PYTHONUNBUFFERED=1
 
 volumes:
   dataflux_logs:

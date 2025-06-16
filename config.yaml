@@ -2,6 +2,8 @@
 
 mode: safe
 
+debug: true
+
 emitters: 100000
 flush_batch_size: 1000
 flush_interval_sec: 1
@@ -32,7 +34,7 @@ streams:
     weight: 0.25
     interval_sec: 0.01
   user_interactions:
-    weight: 0.2
+    weight: 0.20
     interval_sec: 0.01
   device_telemetry:
     weight: 0.15

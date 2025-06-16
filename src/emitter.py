@@ -67,8 +67,6 @@ async def launch_emitters(
 ) -> None:
     """Launch emitters with rate limiting and batch processing."""
     global rate_limit_semaphore
-
-    # Initialize rate limiting semaphore
     max_concurrent_emissions = min(100000, len(user_pool))  # Limit concurrent emissions
     rate_limit_semaphore = asyncio.Semaphore(max_concurrent_emissions)
 
