@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataFlux Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            @apply bg-white rounded-lg shadow-md p-4;
+        }
+
+        .metric-value {
+            @apply text-2xl font-bold text-gray-800;
+        }
+
+        .metric-label {
+            @apply text-sm text-gray-600;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">DataFlux Dashboard</h1>
+            <p class="text-gray-600">Real-time data ingestion metrics</p>
+        </header>
+
+        <!-- Main Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="metric-card">
+                <div class="metric-value" id="total-events">0</div>
+                <div class="metric-label">Total Events</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="rolling-eps">0</div>
+                <div class="metric-label">Events/sec (5s avg)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="rolling-bps">0 MB/s</div>
+                <div class="metric-label">Bandwidth (5s avg)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="elapsed-time">0s</div>
+                <div class="metric-label">Elapsed Time</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h2 class="text-xl font-semibold mb-4">Event Rate</h2>
+                <canvas id="eventRateChart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h2 class="text-xl font-semibold mb-4">Bandwidth</h2>
+                <canvas id="bandwidthChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Stream Table -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h2 class="text-xl font-semibold mb-4">Stream Metrics</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Stream</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Events</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                % Total</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stream-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const eventRateCtx = document.getElementById('eventRateChart').getContext('2d');
+        const bandwidthCtx = document.getElementById('bandwidthChart').getContext('2d');
+
+        const eventRateChart = new Chart(eventRateCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Events/sec',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const bandwidthChart = new Chart(bandwidthCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'MB/s',
+                    data: [],
+                    borderColor: 'rgb(153, 102, 255)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // WebSocket connection
+        const ws = new WebSocket(`ws://${window.location.host}/ws/metrics`);
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+
+            // Update metrics
+            document.getElementById('total-events').textContent = data.total_events.toLocaleString();
+            document.getElementById('rolling-eps').textContent = data.rolling_eps.toLocaleString();
+            document.getElementById('rolling-bps').textContent = `${data.rolling_bps.toFixed(2)} MB/s`;
+            document.getElementById('elapsed-time').textContent = `${data.elapsed.toFixed(1)}s`;
+
+            // Update charts
+            const timestamp = new Date(data.timestamp).toLocaleTimeString();
+
+            eventRateChart.data.labels.push(timestamp);
+            eventRateChart.data.datasets[0].data.push(data.rolling_eps);
+            if (eventRateChart.data.labels.length > 30) {
+                eventRateChart.data.labels.shift();
+                eventRateChart.data.datasets[0].data.shift();
+            }
+            eventRateChart.update();
+
+            bandwidthChart.data.labels.push(timestamp);
+            bandwidthChart.data.datasets[0].data.push(data.rolling_bps);
+            if (bandwidthChart.data.labels.length > 30) {
+                bandwidthChart.data.labels.shift();
+                bandwidthChart.data.datasets[0].data.shift();
+            }
+            bandwidthChart.update();
+
+            // Update stream table
+            const tableBody = document.getElementById('stream-table-body');
+            tableBody.innerHTML = '';
+            data.streams.forEach(stream => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stream.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${stream.count.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${stream.percent.toFixed(1)}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${(stream.bytes / 1024 / 1024).toFixed(2)} MB</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        ws.onclose = function () {
+            console.log('WebSocket connection closed');
+        };
+    </script>
+</body>
+
+</html>

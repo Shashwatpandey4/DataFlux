@@ -13,9 +13,17 @@ time_jitter_sec: 0.1
 sinks:
   mock:
     type: mock
+  kafka:
+    type: kafka
+    kafka:
+      bootstrap_servers: "kafka:29092"  # Using internal Docker network address
+      topic: "dataflux-events"
+      acks: "all"
+      max_retries: 3
+      retry_backoff_ms: 100
 
 region_sinks:
-  default: [mock]
+  default: [kafka, mock]  # Send to both Kafka and mock for testing
 
 regions:
   - name: us-west

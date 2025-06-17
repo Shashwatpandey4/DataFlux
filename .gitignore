@@ -23,3 +23,6 @@ dataflux_output/
 .parquet/
 *.parquet
 *.csv
+
+# Mock data
+mock_data/

@@ -20,7 +20,6 @@ class FastAPISink(BaseSink):
         """Send events to FastAPI endpoint."""
         # For now, just print events
         for event in events:
-            print(f"[FastAPISink] Event: {event}")
             self.event_count += 1
 
     async def close(self) -> None:

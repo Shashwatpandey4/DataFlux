@@ -29,5 +29,5 @@ ENV PYTHONPATH=/app
 # Expose port
 EXPOSE 9100
 
-# Set the entrypoint
-ENTRYPOINT ["python", "-m", "src.main"] 
+# Removed CMD to prevent automatic start
+# CMD ["python", "-m", "src.main", "run"] 

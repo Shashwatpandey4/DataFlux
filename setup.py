@@ -6,10 +6,15 @@ setup(
     packages=find_packages(),
     install_requires=[
         "rich>=10.0.0",
+        "fastapi>=0.68.0",
+        "uvicorn>=0.15.0",
+        "jinja2>=3.0.0",
+        "websockets>=10.0",
+        "python-multipart>=0.0.5",
     ],
     entry_points={
         "console_scripts": [
-            "dataflux=launch:main",
+            "dataflux=src.main:main",
         ],
     },
 )

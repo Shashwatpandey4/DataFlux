@@ -2,13 +2,18 @@ import argparse
 import asyncio
 from pathlib import Path
 
+import uvicorn
 import yaml
+from rich.console import Console
+from rich.table import Table
 
-from .counters import start_counter_logger
-from .edge_buffer import initialize_buffers
+from .counters import counters, start_counter_logger
+from .edge_buffer import cleanup, initialize_buffers
 from .emitter import launch_emitters
 from .sinks.factory import get_sink
+from .user_pool import generate_user_device_pool
 from .utils import generate_user_device_pool
+from .web.app import app as web_app
 
 
 def load_config(sink_type="mock"):
@@ -27,8 +32,40 @@ def load_config(sink_type="mock"):
     elif sink_type == "fastapi":
         config["sinks"] = {"fastapi": config["sinks"]["fastapi"]}
         config["region_sinks"] = {"default": ["fastapi"]}
-
     return config
+
+
+def create_metrics_table(console):
+    """Create a table for displaying metrics."""
+    table = Table(title="DataFlux Metrics")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    console.print(table)
+    return table
+
+
+async def update_metrics(console, table, config):
+    """Update and display metrics."""
+    while True:
+        table.clear_rows()
+        print("Current counters:", counters)  # Debug print to show current counters
+        # Add event counts
+        for stream, count in counters.items():
+            table.add_row(f"{stream} Events", str(count))
+
+        # Add total events
+        total_events = sum(counters.values())
+        table.add_row("Total Events", str(total_events))
+
+        # Add event rate (events per second)
+        if hasattr(update_metrics, "last_total"):
+            rate = total_events - update_metrics.last_total
+            table.add_row("Events/sec", str(rate))
+        update_metrics.last_total = total_events
+
+        console.clear()
+        console.print(table)
+        await asyncio.sleep(1)
 
 
 async def main(worker_id, sink_type="mock", mode="normal"):
@@ -72,15 +109,50 @@ async def main(worker_id, sink_type="mock", mode="normal"):
                 pass
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("worker_id", type=int, nargs="?", default=0)
-    parser.add_argument(
-        "--sink", type=str, default="mock", choices=["mock", "kafka", "fastapi"]
+def main():
+    """Main entry point for the application."""
+    parser = argparse.ArgumentParser(
+        description="DataFlux - High-throughput data simulation framework"
     )
-    parser.add_argument(
-        "--mode", type=str, default="normal", choices=["normal", "safe"]
-    )
+    parser.add_argument("command", choices=["run", "help"], help="Command to execute")
     args = parser.parse_args()
 
-    asyncio.run(main(args.worker_id, args.sink, args.mode))
+    if args.command == "help":
+        parser.print_help()
+        return
+
+    if args.command == "run":
+        asyncio.run(run_dataflux())
+
+
+async def run_dataflux():
+    """Run the DataFlux application."""
+    console = Console()
+    config = load_config()
+
+    # Initialize components
+    user_pool = generate_user_device_pool(config["emitters"], config["regions"])
+    buffers = initialize_buffers(config["regions"], config)
+
+    # Start the web dashboard
+    uvicorn_config = uvicorn.Config(
+        web_app, host="0.0.0.0", port=8000, log_level="info"
+    )
+    server = uvicorn.Server(uvicorn_config)
+    dashboard_task = asyncio.create_task(server.serve())
+
+    # Start the counter logger (this updates rolling metrics)
+    counter_logger_task = asyncio.create_task(start_counter_logger())
+
+    try:
+        await launch_emitters(user_pool, config, buffers)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Shutting down...[/yellow]")
+    finally:
+        dashboard_task.cancel()
+        counter_logger_task.cancel()
+        await cleanup()
+
+
+if __name__ == "__main__":
+    main()
