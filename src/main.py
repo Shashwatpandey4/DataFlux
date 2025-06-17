@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import sys
 from pathlib import Path
 
 import uvicorn
@@ -7,7 +8,7 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
-from .counters import counters, start_counter_logger
+from .counters import counters
 from .edge_buffer import cleanup, initialize_buffers
 from .emitter import launch_emitters
 from .sinks.factory import get_sink
@@ -83,11 +84,6 @@ async def main(worker_id, sink_type="mock", mode="normal"):
     sink = get_sink(sink_type)
     sink.initialize(config)
 
-    # Start counter logger (only for worker 0)
-    counter_task = None
-    if worker_id == 0:
-        counter_task = asyncio.create_task(start_counter_logger())
-
     # Generate user pool
     user_pool = generate_user_device_pool(config["emitters"], config["regions"])
 
@@ -100,13 +96,6 @@ async def main(worker_id, sink_type="mock", mode="normal"):
     finally:
         # Ensure sink is closed
         await sink.close()
-        # Cancel counter logger if it exists
-        if counter_task:
-            counter_task.cancel()
-            try:
-                await counter_task
-            except asyncio.CancelledError:
-                pass
 
 
 def main():
@@ -122,7 +111,20 @@ def main():
         return
 
     if args.command == "run":
+        try:
+            asyncio.run(run_dataflux())
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            print("\nShutting down gracefully...")
+            sys.exit(0)
+
+
+def start_command():
+    """Command to start the DataFlux application."""
+    try:
         asyncio.run(run_dataflux())
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        print("\nShutting down gracefully...")
+        sys.exit(0)
 
 
 async def run_dataflux():
@@ -141,16 +143,16 @@ async def run_dataflux():
     server = uvicorn.Server(uvicorn_config)
     dashboard_task = asyncio.create_task(server.serve())
 
-    # Start the counter logger (this updates rolling metrics)
-    counter_logger_task = asyncio.create_task(start_counter_logger())
-
     try:
         await launch_emitters(user_pool, config, buffers)
-    except KeyboardInterrupt:
-        console.print("\n[yellow]Shutting down...[/yellow]")
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        console.print("\n[yellow]Shutting down gracefully...[/yellow]")
     finally:
         dashboard_task.cancel()
-        counter_logger_task.cancel()
+        try:
+            await dashboard_task
+        except asyncio.CancelledError:
+            pass
         await cleanup()
 
 

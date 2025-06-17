@@ -5,6 +5,7 @@ services:
     build: .
     ports:
       - "9100:9100"
+      - "8000:8000"
     tty: true
     stdin_open: true
     restart: "no"
@@ -12,6 +13,7 @@ services:
       - ./mock_data:/app/mock_data
     environment:
       - PYTHONUNBUFFERED=1
+    command: ["tail", "-f", "/dev/null"]
     networks:
       - dataflux_network
     depends_on:
@@ -39,11 +41,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: broker
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - dataflux_network
 

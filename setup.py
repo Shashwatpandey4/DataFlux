@@ -15,6 +15,7 @@ setup(
     entry_points={
         "console_scripts": [
             "dataflux=src.main:main",
+            "dataflux-start=src.main:start_command",
         ],
     },
 )

@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the application code
 COPY src/ ./src/
 COPY config.yaml ./
+COPY setup.py ./
 
 # Create logs directory
 RUN mkdir -p /app/logs
@@ -26,8 +27,9 @@ RUN mkdir -p /app/logs
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
+# Install the package in development mode
+RUN pip install -e .
+
 # Expose port
 EXPOSE 9100
-
-# Removed CMD to prevent automatic start
-# CMD ["python", "-m", "src.main", "run"] 
+EXPOSE 8000 

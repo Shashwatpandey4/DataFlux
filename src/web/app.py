@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from typing import List
 
-from fastapi import FastAPI, Request, WebSocket
+from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,7 +17,7 @@ from ..counters import (
     stream_bytes,
 )
 
-app = FastAPI(title="DataFlux Dashboard")
+app = FastAPI()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="src/web/static"), name="static")
@@ -30,9 +30,18 @@ active_connections: List[WebSocket] = []
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_dashboard(request: Request):
-    """Render the main dashboard page."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+async def root():
+    return """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>DataFlux</title>
+        </head>
+        <body>
+            <h1>DataFlux</h1>
+        </body>
+    </html>
+    """
 
 
 @app.websocket("/ws/metrics")
