@@ -138,7 +138,7 @@ async def run_dataflux():
 
     # Start the web dashboard
     uvicorn_config = uvicorn.Config(
-        web_app, host="0.0.0.0", port=8000, log_level="info"
+        web_app, host="0.0.0.0", port=8000, log_level="info", reload=True
     )
     server = uvicorn.Server(uvicorn_config)
     dashboard_task = asyncio.create_task(server.serve())

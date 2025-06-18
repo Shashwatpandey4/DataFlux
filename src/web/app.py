@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from typing import List
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -30,18 +30,8 @@ active_connections: List[WebSocket] = []
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    return """
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>DataFlux</title>
-        </head>
-        <body>
-            <h1>DataFlux</h1>
-        </body>
-    </html>
-    """
+async def root(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
 @app.websocket("/ws/metrics")
